@@ -1,0 +1,54 @@
+Model Card: Cup and Handle Pattern Detection
+--------------------------------------------------------------------------------
+
+### Inputs
+
+- **Data Source:** The dataset is sourced from the Yahoo Finance API using the `yfinance` Python library. It includes daily price and volume data for all stocks in the S&P 500.
+- **Time Frame:** The data spans the last five years up to the date of execution.
+- **Engineered Features:** The raw data is used to calculate a rich set of technical indicators, including:
+    - Moving Averages (SMA-10, SMA-50)
+    - Relative Strength Index (RSI)
+    - Moving Average Convergence Divergence (MACD) and its signal line
+    - Bollinger Bands
+    - Average True Range (ATR)
+- **Target Variable:** A custom function, which includes stringent rules for a preceding uptrend, cup shape, handle retracement, and volume confirmation, generates a binary label (`1` for pattern, `0` for no pattern). This results in a highly imbalanced dataset.
+
+### Output
+
+The model outputs a binary prediction (`1` or `0`) for whether a cup and handle pattern is present on a given day for a given stock. This prediction can be interpreted as a trading signal.
+
+The code provides the following outputs for analysis:
+- Performance metrics (Precision, Recall, F1-Score) for both the XGBoost and LightGBM models on the validation and test datasets.
+- A confusion matrix to visualize the types of errors made by the best-performing model.
+- A feature importance chart to identify which features are most influential in the model's predictions.
+
+### Model Architecture
+
+This is a time-series classification challenge. The model architecture is designed to handle this:
+1. **Data Preprocessing:**
+    - Data for all S&P 500 tickers is acquired, cleaned, and a fill-forward method is applied for missing values.
+    - The raw data is transformed into a rich feature set of technical indicators.
+    - A custom labeling function is used to identify and label the cup and handle pattern.
+2. **Model Training:**
+    - Two machine learning models, **XGBoost** and **LightGBM**, are trained and evaluated.
+    - Data is split chronologically by ticker (60% train, 20% validation, 20% test) to prevent data leakage.
+    - `RandomizedSearchCV` is used to tune hyperparameters for each model to optimize performance on the imbalanced dataset.
+
+### Performance
+
+Performance is primarily measured using the **F1-Score**, which provides a balanced view of both precision and recall, as well as the individual precision and recall scores.
+
+The average test data performance across the models is:
+
+| Model        | Precision | Recall | F1-Score |
+| :---         | :---      | :---   | :---     |
+| **XGBoost** | 0.2678    | 0.7040 | 0.3880   |
+| LightGBM     | 0.2142    | 0.8899 | 0.3453   |
+
+The **XGBoost** model is the best performer, though its precision indicates a high number of false positive predictions, which should be considered when interpreting the trading signals.
+
+### Limitations
+
+- **Data Limitations:** The model is estimated over a specific five-year period. Its performance may be sensitive to new market regimes or events not present in the training data. The model does not incorporate fundamental analysis data, which could provide a more complete picture of a stock's health.
+- **Model Limitations:** The models tested here have limited interpretability, making it difficult to fully understand the specific reasons for each prediction. The model's performance relies heavily on the quality and robustness of the engineered features and the pattern-labeling function.
+- **Trade-offs:** There is a trade-off between model performance and interpretability. More complex models may achieve higher scores but are harder to explain.
